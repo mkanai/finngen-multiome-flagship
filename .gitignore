@@ -1,0 +1,11 @@
+.DS_Store
+data/
+tables/
+local/
+*.ai
+*.png
+
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
