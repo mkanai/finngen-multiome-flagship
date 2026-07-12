@@ -62,6 +62,7 @@ For figures assembled in Illustrator from multiple R-generated panels, only the 
 - [`SFig24_batch_LISI.R`](SFig24_batch_LISI.R):
   - [SFig24_batch_variance.pdf](../figures/SFig24_batch_variance.pdf)
   - [SFig25_batch_lisi.pdf](../figures/SFig25_batch_lisi.pdf)
+- [`SFig26_mashr_missingness.R`](SFig26_mashr_missingness.R): [SFig26_mashr_missingness.pdf](../figures/SFig26_mashr_missingness.pdf)
 - [`SFig27_mashr_sensitivity.R`](SFig27_mashr_sensitivity.R): [SFig27_mashr_sensitivity.pdf](../figures/SFig27_mashr_sensitivity.pdf)
 
 ## Supplementary tables

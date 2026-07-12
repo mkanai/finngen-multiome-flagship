@@ -64,7 +64,9 @@ plot_lfsr_density <- function(df,
     ) +
     scale_x_continuous(expand = expansion()) +
     scale_y_continuous(expand = expansion()) +
-    scale_color_viridis_c(trans = "log10", option = "inferno", labels = scales::label_log()) +
+    scale_color_viridis_c(trans = "log10",
+                          option = "inferno",
+                          labels = scales::label_log()) +
     locusviz::get_default_theme(
       legend.position = c(1, 0),
       legend.justification = c(1, 0),
@@ -131,20 +133,91 @@ p.rho =
   locusviz::get_default_theme(legend.position = "none", hide.ylab = TRUE) +
   labs(x = expression(paste("LFSR correlation ", italic(rho))))
 
-plt = p.gex + p.atac + p.sig.rate + p.rho + patchwork::plot_layout(nrow = 2) + patchwork::plot_annotation(tag_levels = "a")
+################################################################################
+
+thresholds <- c(0.25, 0.5, 0.75, 0.9)
+
+rate_at_threshold <- function(thr) {
+  base <- "gs://expansion_areas/multiome/batch1_5/mashr"
+  df.gex <- read_lfsr(
+    sprintf("%s/integrated_gex_batch1_5.mashr.lfsr.tsv.gz", base),
+    sprintf(
+      "%s/sensitivity_%s/integrated_gex_batch1_5.mashr.lfsr.tsv.gz",
+      base,
+      thr
+    )
+  ) %>% dplyr::mutate(QTL = "eQTL")
+  df.atac <- read_lfsr(
+    sprintf("%s/integrated_atac_batch1_5.mashr.lfsr.tsv.gz", base),
+    sprintf(
+      "%s/sensitivity_%s/integrated_atac_batch1_5.mashr.lfsr.tsv.gz",
+      base,
+      thr
+    )
+  ) %>% dplyr::mutate(QTL = "caQTL")
+  
+  dplyr::bind_rows(df.gex, df.atac) %>%
+    dplyr::group_by(QTL, cell_type) %>%
+    dplyr::summarize(
+      conc = mean((lfsr.x < 0.05) == (lfsr.y < 0.05)),
+      rho = cor(lfsr.x, lfsr.y, method = "spearman"),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(threshold = thr, cell_type = remove_cell_type_prefix(cell_type))
+}
+
+df.titr <- purrr::map_dfr(thresholds, rate_at_threshold)
+
+df.titr.med <- df.titr %>%
+  dplyr::group_by(QTL, threshold) %>%
+  dplyr::summarize(conc = median(conc),
+                   rho = median(rho),
+                   .groups = "drop")
+
+plot_titration <- function(metric, xlab, percent_x = FALSE, hide.ylab = FALSE) {
+  p <- ggplot(df.titr, aes(.data[[metric]], threshold, color = QTL)) +
+    ggrastr::rasterize(geom_point(
+      size = 0.75,
+      stroke = 0,
+      alpha = 0.5
+    ), dpi = 300) +
+    geom_line(data = df.titr.med,
+              orientation = "y",
+              linewidth = 0.5) +
+    geom_point(data = df.titr.med) +
+    scale_y_continuous(
+      labels = scales::label_percent(),
+      breaks = thresholds,
+      expand = expansion(0.05)
+    ) +
+    scale_color_manual(values = qtl.colors) +
+    coord_cartesian(xlim = c(0.5, 1)) +
+    locusviz::get_default_theme(legend.position = "none", hide.ylab = hide.ylab) +
+    labs(x = xlab, y = "Min. observed fraction")
+  if (percent_x) {
+    p <- p + scale_x_continuous(labels = scales::label_percent(), expand = expansion(0.05))
+  }
+  p
+}
+
+p.titr.conc <- plot_titration("conc", "% significance concordance", percent_x = TRUE)
+p.titr.rho <- plot_titration("rho", expression(paste("LFSR correlation ", italic(rho))), hide.ylab = TRUE)
+
+plt = p.gex + p.atac + p.sig.rate + p.rho + p.titr.conc + p.titr.rho +
+  patchwork::plot_layout(nrow = 3) + patchwork::plot_annotation(tag_levels = "a")
 plt
 
 cowplot::save_plot(
   "figures/SFig27_mashr_sensitivity.pdf",
   plt,
-  base_height = 120,
+  base_height = 170,
   base_width = 120,
   units = "mm"
 )
 cowplot::save_plot(
   "figures/SFig27_mashr_sensitivity.png",
   plt,
-  base_height = 120,
+  base_height = 170,
   base_width = 120,
   units = "mm",
   dpi = 300
