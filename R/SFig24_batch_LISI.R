@@ -45,7 +45,7 @@ p.batch =
   labs(x = expression(paste("Adjusted ", italic(R)^2)))
 
 cowplot::save_plot(
-  "figures/SFig23_batch_variance.pdf",
+  "figures/SFig24_batch_variance.pdf",
   p.batch,
   base_height = 90,
   base_width = 90,
@@ -53,7 +53,7 @@ cowplot::save_plot(
 )
 
 cowplot::save_plot(
-  "figures/SFig23_batch_variance.png",
+  "figures/SFig24_batch_variance.png",
   p.batch,
   base_height = 90,
   base_width = 90,
@@ -109,7 +109,7 @@ p.lisi = list(
   patchwork::plot_annotation(tag_levels = "a")
 
 cowplot::save_plot(
-  "figures/SFig24_batch_lisi.pdf",
+  "figures/SFig25_batch_lisi.pdf",
   p.lisi,
   base_height = 120,
   base_width = 120,
@@ -117,7 +117,7 @@ cowplot::save_plot(
 )
 
 cowplot::save_plot(
-  "figures/SFig24_batch_lisi.png",
+  "figures/SFig25_batch_lisi.png",
   p.lisi,
   base_height = 120,
   base_width = 120,

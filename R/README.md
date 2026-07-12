@@ -25,8 +25,9 @@ For figures assembled in Illustrator from multiple R-generated panels, only the 
   - [Fig5_gwas_coloc.pdf](../figures/Fig5_gwas_coloc.pdf)
   - [ExtendedDataFig9_constraint_loeuf.pdf](../figures/ExtendedDataFig9_constraint_loeuf.pdf)
   - [SFig11_smr.pdf](../figures/SFig11_smr.pdf)
-  - [SFig18_coloc_per_level.pdf](../figures/SFig18_coloc_per_level.pdf)
-  - [SFig22_AFE_MAF.pdf](../figures/SFig22_AFE_MAF.pdf)
+  - [SFig18_constraint_per_level.pdf](../figures/SFig18_constraint_per_level.pdf)
+  - [SFig22_constraint_link_per_level.pdf](../figures/SFig22_constraint_link_per_level.pdf)
+  - [SFig23_AFE_MAF.pdf](../figures/SFig23_AFE_MAF.pdf)
 - [`Fig6_vignettes.R`](Fig6_vignettes.R): [Fig6_vignettes.pdf](../figures/Fig6_vignettes.pdf)
 
 ## Extended Data figures
@@ -58,10 +59,10 @@ For figures assembled in Illustrator from multiple R-generated panels, only the 
 - [`SFig19_buffering_downsample.R`](SFig19_buffering_downsample.R): [SFig19_buffering_downsample.pdf](../figures/SFig19_buffering_downsample.pdf)
 - [`SFig20_buffering_replication.R`](SFig20_buffering_replication.R): [SFig20_buffering_replication.pdf](../figures/SFig20_buffering_replication.pdf)
 - [`SFig21_GRAMD1B_FAS.R`](SFig21_GRAMD1B_FAS.R): [SFig21_GRAMD1B_FAS.pdf](../figures/SFig21_GRAMD1B_FAS.pdf)
-- [`SFig23_batch_LISI.R`](SFig23_batch_LISI.R):
-  - [SFig23_batch_variance.pdf](../figures/SFig23_batch_variance.pdf)
-  - [SFig24_batch_lisi.pdf](../figures/SFig24_batch_lisi.pdf)
-- [`SFig25_mashr_sensitivity.R`](SFig25_mashr_sensitivity.R): [SFig25_mashr_sensitivity.pdf](../figures/SFig25_mashr_sensitivity.pdf)
+- [`SFig24_batch_LISI.R`](SFig24_batch_LISI.R):
+  - [SFig24_batch_variance.pdf](../figures/SFig24_batch_variance.pdf)
+  - [SFig25_batch_lisi.pdf](../figures/SFig25_batch_lisi.pdf)
+- [`SFig27_mashr_sensitivity.R`](SFig27_mashr_sensitivity.R): [SFig27_mashr_sensitivity.pdf](../figures/SFig27_mashr_sensitivity.pdf)
 
 ## Supplementary tables
 

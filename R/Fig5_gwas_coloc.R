@@ -341,14 +341,7 @@ if (!file.exists("tables/ST23_cascade_coloc_variants.tsv")) {
 if (!file.exists("tables/ST24_smr.tsv")) {
   dplyr::filter(df.coloc, !is.na(p_SMR)) %>%
     dplyr::select(
-      -dataset1,
-      -dataset2,
-      -low_purity1,
-      -low_purity2,
-      -(cs1_size:probmass_2),
-      -colocRes,
-      -(ProbeChr:p_eQTL),
-      -sig
+      -dataset1,-dataset2,-low_purity1,-low_purity2,-(cs1_size:probmass_2),-colocRes,-(ProbeChr:p_eQTL),-sig
     ) %>%
     dplyr::select(QTL, cell_type, tidyselect::everything()) %>%
     export_table("tables/ST24_coloc_smr.tsv", save_googlesheet = FALSE)
@@ -871,7 +864,7 @@ p.cascade.coloc.smr =
       qtl_mechanism_category
     )
   ) %>%
-  dplyr::rename_with( ~ sub("^(frac_(coloc|smr))$", "\\1_value", .x)) %>%
+  dplyr::rename_with(~ sub("^(frac_(coloc|smr))$", "\\1_value", .x)) %>%
   tidyr::pivot_longer(
     cols = tidyselect::starts_with("frac_"),
     names_to = c("type", ".value"),
@@ -1625,9 +1618,110 @@ get_cell_type_level <- function(cell_type) {
   dplyr::case_when(
     cell_type == "predicted.celltype.l1.PBMC" ~ "L0",
     filter_l1_cell_types(cell_type) &
-      cell_type != "predicted.celltype.l1.PBMC" ~ "L1",!filter_l1_cell_types(cell_type) ~ "L2"
+      cell_type != "predicted.celltype.l1.PBMC" ~ "L1",
+    !filter_l1_cell_types(cell_type) ~ "L2"
   )
 }
+
+eQTL.per_level.shades = BuenColors::jdb_palette("brewer_red")[c(8, 6, 4)]
+caQTL.per_level.shades = BuenColors::jdb_palette("brewer_blue")[c(8, 6, 4)]
+
+df.gex.in_cs.per_level =
+  dplyr::inner_join(
+    df.loeuf.v4,
+    dplyr::mutate(df.gex.in_cs.all, cell_type_level = get_cell_type_level(cell_type)) %>%
+      dplyr::group_by(cell_type_level, region) %>%
+      dplyr::slice_max(abs_beta, n = 1, with_ties = FALSE) %>%
+      dplyr::ungroup(),
+    by = c("gene_id" = "region")
+  )
+
+dplyr::group_by(df.gex.in_cs.per_level, cell_type_level) %>%
+  dplyr::group_map( ~ {
+    ct = with(.x, cor.test(lof.oe_ci.upper, abs_beta, method = "spearman"))
+    print(ct)
+  })
+
+df.gex.in_cs.per_level.loeuf =
+  dplyr::group_by(df.gex.in_cs.per_level,
+                  cell_type_level,
+                  lof.oe_ci.upper_bin_decile) %>%
+  dplyr::summarize(
+    n_annot = length(unique(gene_id[!is.na(abs_beta)])),
+    n_total = length(unique(gene_id)),
+    locusviz::binom_ci(n_annot, n_total),
+    locusviz::median_ci(abs_beta),
+    .groups = "drop"
+  )
+
+df.atac.in_cs.per_level =
+  dplyr::inner_join(
+    df.loeuf.v4,
+    dplyr::mutate(df.atac.in_cs.all, cell_type_level = get_cell_type_level(cell_type)) %>%
+      dplyr::group_by(cell_type_level, region) %>%
+      dplyr::slice_max(abs_beta, n = 1, with_ties = FALSE) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(peak_id = region, region = gene_id),
+    by = c("gene_id" = "region")
+  )
+
+dplyr::group_by(df.atac.in_cs.per_level, cell_type_level) %>%
+  dplyr::group_map( ~ {
+    ct = with(.x, cor.test(lof.oe_ci.upper, abs_beta, method = "spearman"))
+    print(ct)
+  })
+
+df.atac.in_cs.per_level.loeuf =
+  dplyr::group_by(df.atac.in_cs.per_level,
+                  cell_type_level,
+                  lof.oe_ci.upper_bin_decile) %>%
+  dplyr::summarize(
+    n_annot = length(unique(gene_id[!is.na(abs_beta)])),
+    n_total = length(unique(gene_id)),
+    locusviz::binom_ci(n_annot, n_total),
+    locusviz::median_ci(abs_beta),
+    .groups = "drop"
+  )
+
+p.constraint.gex.per_level =
+  dplyr::mutate(df.gex.in_cs.per_level.loeuf,
+                x = (lof.oe_ci.upper_bin_decile + 0.5) / 10) %>%
+  ggplot(aes(x, median)) +
+  geom_ribbon(aes(ymin = median_lower, ymax = median_upper, fill = cell_type_level),
+              alpha = 0.1) +
+  geom_line(aes(color = cell_type_level)) +
+  geom_point(aes(color = cell_type_level)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 0.35)) +
+  scale_x_continuous(labels = scales::label_percent(), expand = expansion()) +
+  scale_y_continuous(expand = expansion()) +
+  locusviz::get_default_theme() +
+  scale_color_manual(values = eQTL.per_level.shades) +
+  scale_fill_manual(values = eQTL.per_level.shades, guide = "none") +
+  labs(x = "LOEUF decile",
+       y = expression(paste("Median |", italic(beta)[eQTL], "|")),
+       color = "Cell type level",
+       title = "eQTL")
+p.constraint.gex.per_level
+
+p.constraint.atac.per_level =
+  dplyr::mutate(df.atac.in_cs.per_level.loeuf,
+                x = (lof.oe_ci.upper_bin_decile + 0.5) / 10) %>%
+  ggplot(aes(x, median)) +
+  geom_ribbon(aes(ymin = median_lower, ymax = median_upper, fill = cell_type_level),
+              alpha = 0.1) +
+  geom_line(aes(color = cell_type_level)) +
+  geom_point(aes(color = cell_type_level)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 0.78)) +
+  scale_x_continuous(labels = scales::label_percent(), expand = expansion()) +
+  scale_y_continuous(expand = expansion()) +
+  locusviz::get_default_theme() +
+  scale_color_manual(values = caQTL.per_level.shades) +
+  scale_fill_manual(values = caQTL.per_level.shades, guide = "none") +
+  labs(x = "LOEUF decile",
+       y = expression(paste("Median |", italic(beta)[caQTL], "|")),
+       color = "Cell type level",
+       title = "caQTL")
+p.constraint.atac.per_level
 
 df.eqtl.coloc.per_level =
   dplyr::filter(df.coloc, QTL == "eQTL") %>%
@@ -1669,10 +1763,6 @@ df.constraint.coloc.per_level =
   ) %>%
   dplyr::mutate(x = (lof.oe_ci.upper_bin_decile + 0.5) / 10)
 
-
-eQTL.per_level.shades = BuenColors::jdb_palette("brewer_red")[c(8, 6, 4)]
-caQTL.per_level.shades = BuenColors::jdb_palette("brewer_blue")[c(8, 6, 4)]
-
 p.constraint.coloc.eQTL.per_level =
   dplyr::filter(df.constraint.coloc.per_level, QTL == "eQTL") %>%
   ggplot(aes(x, frac)) +
@@ -1713,21 +1803,153 @@ p.constraint.coloc.caQTL.per_level =
     title = "caQTL"
   )
 
-p.constraint.coloc.per_level =
+p.constraint.per_level =
+  p.constraint.gex.per_level + p.constraint.atac.per_level +
   p.constraint.coloc.eQTL.per_level + p.constraint.coloc.caQTL.per_level +
   patchwork::plot_annotation(tag_levels = "a")
-p.constraint.coloc.per_level
+p.constraint.per_level
 
 cowplot::save_plot(
-  "figures/SFig18_coloc_per_level.pdf",
-  p.constraint.coloc.per_level,
+  "figures/SFig18_constraint_per_level.pdf",
+  p.constraint.per_level,
+  base_height = 120,
+  base_width = 120,
+  units = "mm"
+)
+cowplot::save_plot(
+  "figures/SFig18_constraint_per_level.png",
+  p.constraint.per_level,
+  base_height = 120,
+  base_width = 120,
+  units = "mm",
+  dpi = 300
+)
+
+################################################################################
+# LOEUF decile x cell-type-level interaction
+df.eqtl.coloc.interaction =
+  dplyr::left_join(
+    tidyr::crossing(df.loeuf.v4, cell_type_level = c("L0", "L1", "L2")),
+    df.eqtl.coloc.per_level,
+    by = c("gene_id" = "trait2", "cell_type_level")
+  ) %>%
+  dplyr::mutate(
+    coloc = dplyr::coalesce(coloc, FALSE),
+    cell_type_level = factor(cell_type_level, levels = c("L0", "L1", "L2"))
+  )
+
+fit.reduced = glm(coloc ~ lof.oe_ci.upper_bin_decile + cell_type_level,
+                  data = df.eqtl.coloc.interaction, family = binomial())
+fit.full = glm(coloc ~ lof.oe_ci.upper_bin_decile * cell_type_level,
+               data = df.eqtl.coloc.interaction, family = binomial())
+print(anova(fit.reduced, fit.full, test = "LRT"))
+length(unique(df.eqtl.coloc.interaction$gene_id))
+
+dplyr::group_by(df.eqtl.coloc.interaction, cell_type_level) %>%
+  dplyr::summarize(coloc_rate = mean(coloc), n_genes = dplyr::n(), .groups = "drop")
+
+df.coloc.per_level.slope =
+  dplyr::group_by(df.eqtl.coloc.interaction, cell_type_level) %>%
+  dplyr::group_modify(~ {
+    s = summary(glm(coloc ~ lof.oe_ci.upper_bin_decile, data = .x,
+                    family = binomial()))$coefficients["lof.oe_ci.upper_bin_decile", ]
+    tibble::tibble(slope = s[["Estimate"]], p = s[["Pr(>|z|)"]])
+  }) %>%
+  dplyr::left_join(
+    dplyr::filter(df.constraint.coloc.per_level, QTL == "eQTL") %>%
+      dplyr::group_by(cell_type_level) %>%
+      dplyr::summarize(rho = cor(lof.oe_ci.upper_bin_decile, frac, method = "spearman"),
+                       .groups = "drop"),
+    by = "cell_type_level"
+  )
+print(df.coloc.per_level.slope)
+
+################################################################################
+
+df.link.abs_beta.per_level =
+  dplyr::inner_join(
+    df.loeuf.v4,
+    dplyr::filter(df.open4gene.sig, mode %in% c("dual", "rheostat")) %>%
+      dplyr::mutate(cell_type_level = get_cell_type_level(cell_type)) %>%
+      dplyr::group_by(cell_type_level, gene_id) %>%
+      dplyr::summarize(n_peaks = length(unique(peak_id)), abs_beta = max(abs(hurdle_count_beta)), .groups = "drop") %>%
+      dplyr::rename(region = gene_id),
+    by = c("gene_id" = "region")
+  )
+
+
+dplyr::group_by(df.link.abs_beta.per_level, cell_type_level) %>%
+  dplyr::group_map( ~ {
+    ct = with(.x, cor.test(lof.oe_ci.upper, abs_beta, method = "spearman"))
+    print(ct)
+  })
+
+df.link.abs_beta.per_level.loeuf =
+  dplyr::group_by(df.link.abs_beta.per_level,
+                  cell_type_level,
+                  lof.oe_ci.upper_bin_decile) %>%
+  dplyr::summarize(
+    n_annot = length(unique(gene_id[!is.na(abs_beta)])),
+    n_total = length(unique(gene_id)),
+    locusviz::binom_ci(n_annot, n_total),
+    locusviz::median_ci(abs_beta),
+    locusviz::median_ci(n_peaks, colname = "median_n_peaks"),
+    .groups = "drop"
+  )
+
+p.constraint.link.per_level =
+  dplyr::mutate(df.link.abs_beta.per_level.loeuf,
+                x = (lof.oe_ci.upper_bin_decile + 0.5) / 10) %>%
+  ggplot(aes(x, median)) +
+  geom_ribbon(aes(ymin = median_lower, ymax = median_upper, fill = cell_type_level),
+              alpha = 0.1) +
+  geom_line(aes(color = cell_type_level)) +
+  geom_point(aes(color = cell_type_level)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 0.53)) +
+  scale_x_continuous(labels = scales::label_percent(), expand = expansion()) +
+  scale_y_continuous(expand = expansion()) +
+  locusviz::get_default_theme() +
+  scale_color_manual(values = caQTL.per_level.shades) +
+  scale_fill_manual(values = caQTL.per_level.shades, guide = "none") +
+  labs(x = "LOEUF decile",
+       y = expression(paste("Median |", italic(beta)[link], "|")),
+       color = "Cell type level")
+p.constraint.link.per_level
+
+p.constraint.link.per_level.n_peaks =
+  dplyr::mutate(df.link.abs_beta.per_level.loeuf,
+                x = (lof.oe_ci.upper_bin_decile + 0.5) / 10) %>%
+  ggplot(aes(x, median_n_peaks)) +
+  geom_ribbon(aes(ymin = median_n_peaks_lower, ymax = median_n_peaks_upper, fill = cell_type_level),
+              alpha = 0.1) +
+  geom_line(aes(color = cell_type_level)) +
+  geom_point(aes(color = cell_type_level)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 50)) +
+  scale_x_continuous(labels = scales::label_percent(), expand = expansion()) +
+  scale_y_continuous(expand = expansion()) +
+  locusviz::get_default_theme() +
+  scale_color_manual(values = caQTL.per_level.shades) +
+  scale_fill_manual(values = caQTL.per_level.shades, guide = "none") +
+  labs(x = "LOEUF decile",
+       y = "Median # linked peaks",
+       color = "Cell type level")
+p.constraint.link.per_level.n_peaks
+
+p.constraint.link.per_level =
+  p.constraint.link.per_level + p.constraint.link.per_level.n_peaks +
+  patchwork::plot_annotation(tag_levels = "a")
+p.constraint.link.per_level
+
+cowplot::save_plot(
+  "figures/SFig22_constraint_link_per_level.pdf",
+  p.constraint.link.per_level,
   base_height = 60,
   base_width = 120,
   units = "mm"
 )
 cowplot::save_plot(
-  "figures/SFig18_coloc_per_level.png",
-  p.constraint.coloc.per_level,
+  "figures/SFig22_constraint_link_per_level.png",
+  p.constraint.link.per_level,
   base_height = 60,
   base_width = 120,
   units = "mm",
@@ -2195,14 +2417,14 @@ p.enrichment.AFE =
 p.AFE =
   p.MAF + p.enrichment.AFE + patchwork::plot_layout(nrow = 1) + patchwork::plot_annotation(tag_levels = "a")
 cowplot::save_plot(
-  "figures/SFig22_AFE_MAF.pdf",
+  "figures/SFig23_AFE_MAF.pdf",
   p.AFE,
   base_height = 60,
   base_width = 120,
   units = "mm"
 )
 cowplot::save_plot(
-  "figures/SFig22_AFE_MAF.png",
+  "figures/SFig23_AFE_MAF.png",
   p.AFE,
   base_height = 60,
   base_width = 120,

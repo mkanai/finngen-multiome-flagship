@@ -135,14 +135,14 @@ plt = p.gex + p.atac + p.sig.rate + p.rho + patchwork::plot_layout(nrow = 2) + p
 plt
 
 cowplot::save_plot(
-  "figures/SFig25_mashr_sensitivity.pdf",
+  "figures/SFig27_mashr_sensitivity.pdf",
   plt,
   base_height = 120,
   base_width = 120,
   units = "mm"
 )
 cowplot::save_plot(
-  "figures/SFig25_mashr_sensitivity.png",
+  "figures/SFig27_mashr_sensitivity.png",
   plt,
   base_height = 120,
   base_width = 120,
