@@ -322,7 +322,7 @@ df.atac.BACH2.tracks = import_peak_track(
   cell_types = c("predicted.celltype.l1.CD4_T")
 )
 
-p.BACH2.rs72494581 = plot_peak(
+p.BACH2.rs72928038 = plot_peak(
   df.atac.BACH2.tracks,
   start = 90267049 - 400,
   end = 90267049 + 750,
@@ -332,7 +332,7 @@ p.BACH2.rs72494581 = plot_peak(
   hide.ytitle = FALSE,
   x.breaks = c(90267000, 90267500)
 ) +
-  geom_text(aes(x = 90267049, y = 2.1, label = "rs72494581"),
+  geom_text(aes(x = 90267049, y = 2.1, label = "rs72928038"),
             size = 2,
             hjust = -0.1) +
   guides(x.sec = legendry::primitive_bracket(peak.ranges.BACH2))
@@ -370,7 +370,7 @@ CCD
 
 p.ext.cascade =
   list(
-    p.BACH2.rs72494581,
+    p.BACH2.rs72928038,
     p.BACH2.rs6908626,
     p.gene.BACH2,
     patchwork::free(p.variant.spec.heatmap, side = "tb")
