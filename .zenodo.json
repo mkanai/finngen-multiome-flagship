@@ -15,6 +15,7 @@
     {
       "identifier": "10.1101/2025.11.25.25340489",
       "relation": "isSupplementTo",
+      "resource_type": "publication-preprint",
       "scheme": "doi"
     }
   ]
