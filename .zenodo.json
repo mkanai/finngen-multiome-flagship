@@ -1,6 +1,6 @@
 {
   "upload_type": "software",
-  "title": "Analysis code for the FinnGen single-nucleus multiome atlas",
+  "title": "Analysis code for the FinnGen single-nucleus multiome atlas flagship manuscript",
   "description": "Code to reproduce the analyses and figures of the FinnGen population-scale single-nucleus multiome study.",
   "creators": [
     {

@@ -90,7 +90,10 @@ plot_mesc = function(df) {
     ) +
     geom_col() +
     geom_errorbar(
-      aes(ymin = beta_meta - se_meta, ymax = beta_meta + se_meta),
+      aes(
+        ymin = beta_meta - qnorm(0.975) * se_meta,
+        ymax = beta_meta + qnorm(0.975) * se_meta
+      ),
       width = 0,
       color = "grey20"
     ) +
@@ -270,7 +273,10 @@ plot_ldsc = function(df) {
   ggplot(df, aes(Category, beta_meta, fill = annot)) +
     geom_col(position = pd) +
     geom_errorbar(
-      aes(ymin = beta_meta - se_meta, ymax = beta_meta + se_meta),
+      aes(
+        ymin = beta_meta - qnorm(0.975) * se_meta,
+        ymax = beta_meta + qnorm(0.975) * se_meta
+      ),
       width = 0,
       position = pd
     ) +
