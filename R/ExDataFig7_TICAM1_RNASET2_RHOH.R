@@ -360,14 +360,14 @@ p.TICAM1_RNASET2_RHOH =
     p.gex.TICAM1,
     p.gene.TICAM1,
     p.link.TICAM1,
-    p.aiht.RNASET2,
-    p.gex.RNASET2,
-    p.gene.RNASET2,
-    p.link.RNASET2,
     p.aiht.RHOH,
     p.gex.RHOH,
     p.gene.RHOH,
-    p.link.RHOH
+    p.link.RHOH,
+    p.aiht.RNASET2,
+    p.gex.RNASET2,
+    p.gene.RNASET2,
+    p.link.RNASET2
   ) %>%
   purrr::reduce(`+`) +
   patchwork::plot_layout(ncol = 1, heights = rep(c(rep(1, 2), 0.2, 0.7), 3))
@@ -466,12 +466,12 @@ p.forest = list(
   p.gex.TICAM1.forest,
   p.atac.TICAM1.forest,
   p.link.TICAM1.forest,
-  p.gex.RNASET2.forest,
-  p.atac.RNASET2.forest,
-  p.link.RNASET2.forest,
   p.gex.RHOH.forest,
   p.atac.RHOH.forest,
-  p.link.RHOH.forest
+  p.link.RHOH.forest,
+  p.gex.RNASET2.forest,
+  p.atac.RNASET2.forest,
+  p.link.RNASET2.forest
 ) %>%
   purrr::reduce(`+`) +
   patchwork::plot_annotation(tag_levels = "a")

@@ -37,7 +37,7 @@ df.ibd.forest = data.table::fread(
   data.table = F
 ) %>%
   dplyr::mutate(
-    sebeta = beta / qnorm(pval, lower.tail = F),
+    sebeta = beta / qnorm(pval / 2, lower.tail = F),
     trait = immune_traits.TRNC18[phenocode],
     trait = factor(trait, levels = trait[order(beta)]),
     category = dplyr::case_when(
@@ -56,7 +56,10 @@ p.ibd.forest =
     linewidth = 0.3
   ) +
   geom_errorbar(
-    aes(xmin = beta - sebeta, xmax = beta + sebeta),
+    aes(
+      xmin = beta - qnorm(0.975) * sebeta,
+      xmax = beta + qnorm(0.975) * sebeta
+    ),
     width = 0,
     linewidth = 0.3,
     color = "grey50"
@@ -123,7 +126,7 @@ p.link.TNRC18.forest =
   dplyr::rename(beta = hurdle_count_beta, se = hurdle_count_se) %>%
   dplyr::filter(cell_type %in% l1.cell_types.primary) %>%
   dplyr::mutate(sig = ifelse(sig, "FDR < 0.05", "FDR >= 0.05")) %>%
-  plot_forest(hide.xtitle = FALSE, legend.position = c(0, 0.8), legend.justification = c(0, 0.8)) +
+  plot_forest(hide.xtitle = FALSE, legend.position = c(1.3, 0), legend.justification = c(1.3, 0)) +
   labs(title = "Link")
 
 
@@ -219,7 +222,7 @@ df.asthma.IL21R <-
   locusviz::annotate_r2(reference_panel = "sisu42", window = 2e6)
 
 df.aiht.IL21R <-
-  rgsutil:::fread_wrapper("data/E4_HYTHY_AI_STRICTE.IL21R.SUSIE.snp.bgz") %>%
+  rgsutil:::fread_wrapper("data/E4_HYTHY_AI_STRICT.IL21R.SUSIE.snp.bgz") %>%
   dplyr::mutate(r2 = 0) %>%
   locusviz::preprocess(variant_col = "rsid",
                        pip_col = "prob",
@@ -302,7 +305,7 @@ cascade.peaks =
 
 p.gex.IL21R.forest =
   dplyr::filter(df.gex.IL21R, rsid == "chr16_27384341_C_CT") %>%
-  plot_forest(hide.xtitle = FALSE, legend.position = c(1, 0), legend.justification = c(1, 0)) +
+  plot_forest(hide.xtitle = FALSE, legend.position = c(1.25, 0), legend.justification = c(1.25, 0)) +
   labs(title = "eQTL")
 
 start.IL21R <- 27270341
@@ -344,7 +347,7 @@ p.asthma.IL21R =
       label = c("rs144651842", "(IL4R:p.Ala82Thr)")
     ),
     hjust = 1.2,
-    vjust = c(0.5, 2),
+    vjust = c(0.1, 1.6),
     size = 2.5,
     data = NULL
   ) + geom_text(

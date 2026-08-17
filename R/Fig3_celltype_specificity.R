@@ -885,7 +885,7 @@ p.peak.forest =
              linetype = "dashed",
              color = "grey50") +
   geom_errorbarh(
-    aes(xmin = beta - se, xmax = beta + se),
+    aes(xmin = beta - qnorm(0.975) * se, xmax = beta + qnorm(0.975) * se),
     height = 0,
     position = pd,
     show.legend = FALSE

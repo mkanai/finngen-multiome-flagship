@@ -120,13 +120,6 @@ df.atac.l2.egenes =
   dplyr::filter(df.atac.egenes, !filter_l1_cell_types(cell_type))  %>%
   dplyr::mutate(cell_type = remove_cell_type_prefix(cell_type))
 
-if (!file.exists("tables/ST7_gex_egenes.tsv")) {
-  export_table(df.gex.egenes, "tables/ST7_gex_egenes.tsv", "ST7")
-}
-if (!file.exists("tables/ST11_atac_egenes.tsv")) {
-  export_table(df.atac.egenes, "tables/ST11_atac_egenes.tsv", "ST11")
-}
-
 plot_n_egenes = function(df,
                          xlab,
                          cell_type.order,
@@ -1126,7 +1119,7 @@ df.gex.distance =
 df.atac.distance =
   dplyr::mutate(df.atac.in_cs, parse_peak_id(region)) %>%
   dplyr::mutate(
-    peak_pos = (peak_start + peak_start) %/% 2,
+    peak_pos = (peak_start + peak_end) %/% 2,
     distance = position - peak_pos,
     distance_within = dplyr::case_when(
       (peak_start <= position) &
@@ -1163,11 +1156,14 @@ df.distance = dplyr::bind_rows(
 )
 
 dplyr::group_by(df.distance, QTL) %>%
-  dplyr::summarize(median(distance, na.rm = TRUE))
-#    QTL   `median(distance, na.rm = TRUE)`
-#   <chr>                            <dbl>
-# 1 caQTL                              249
-# 2 eQTL                              5371
+  dplyr::summarize(
+    signed_m = median(distance, na.rm = TRUE),
+    abs_m = median(abs(distance), na.rm = TRUE)
+  )
+# QTL   signed_m abs_m
+# <chr>    <dbl> <dbl>
+# 1 caQTL        0  8467
+# 2 eQTL      5371 26082
 
 p.distance =
   dplyr::filter(df.distance, abs(distance) <= 1e5) %>%
@@ -1231,7 +1227,7 @@ plot_distance_bin = function(df.distance.bin, hide.xtitle = FALSE) {
     locusviz::get_default_theme(hide.xtitle = hide.xtitle) +
     theme(legend.title = element_blank()) +
     scale_x_discrete(limits = distance_bin_labels) +
-    scale_y_continuous(expand = expansion(c(0, 0.1)), labels = scales::label_percent()) +
+    scale_y_continuous(expand = expansion(c(0, 0.15)), labels = scales::label_percent()) +
     labs(x = "Binned distance to gene body or peak (Kb)", y = "Fraction")
 }
 
@@ -1629,14 +1625,14 @@ dplyr::filter(df.hsq, cell_type == "predicted.celltype.l1.PBMC") %>%
 #   1 caQTL         0.105
 # 2 eQTL          0.130
 
+df.hsq.mean.all =
+  dplyr::group_by(df.hsq, cell_type, QTL) %>%
+  dplyr::summarize(locusviz::mean_ci(h2cis))
+df.hsq.mean = dplyr::filter(df.hsq.mean.all, filter_l1_cell_types(cell_type))
+
 if (!file.exists("tables/ST17_hsq_mean.tsv")) {
-  df.hsq.mean.all =
-    dplyr::group_by(df.hsq, cell_type, QTL) %>%
-    dplyr::summarize(locusviz::mean_ci(h2cis))
   export_table(df.hsq.mean.all, "tables/ST17_hsq_mean.tsv", "ST17")
 }
-
-df.hsq.mean = dplyr::filter(df.hsq.mean.all, filter_l1_cell_types(cell_type))
 
 p.hsq.pbmc =
   dplyr::filter(df.hsq, cell_type == "predicted.celltype.l1.PBMC") %>%

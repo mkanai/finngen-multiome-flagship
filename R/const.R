@@ -647,7 +647,10 @@ plot_forest = function(df,
     geom_vline(xintercept = 0,
                linetype = "dashed",
                color = "grey50") +
-    geom_errorbar(aes(xmin = beta - se, xmax = beta + se), width = 0) +
+    geom_errorbar(aes(
+      xmin = beta - qnorm(0.975) * se,
+      xmax = beta + qnorm(0.975) * se
+    ), width = 0) +
     geom_point(aes(shape = sig)) +
     scale_color_manual(values = colors, guide = "none") +
     scale_shape_manual(values = c(

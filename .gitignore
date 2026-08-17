@@ -4,6 +4,7 @@ tables/
 local/
 *.ai
 *.png
+*.eps
 
 .Rproj.user
 .Rhistory

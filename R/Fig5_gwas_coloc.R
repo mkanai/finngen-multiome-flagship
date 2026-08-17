@@ -2485,6 +2485,16 @@ df.gex.in_cs.AFE.rho =
   dplyr::group_by(AFE_bin) %>%
   dplyr::summarize(locusviz::spearman_ci(abs_beta, lof.oe_ci.upper), .groups = "drop")
 
+df.atac.in_cs.AFE.rho =
+  dplyr::inner_join(df.atac.in_cs.AFE, df.loeuf.v4, by = c("region" = "gene_id")) %>%
+  dplyr::mutate(
+    AFE_bin = dplyr::case_when(GENOME_enrichment_nfee <= 5 ~ "<= 5", TRUE ~ "> 5"),
+    AFE_bin = factor(AFE_bin, levels = c("> 5", "<= 5")),
+    x = (lof.oe_ci.upper_bin_decile %/% 2 + 0.5) / 5
+  ) %>%
+  dplyr::group_by(AFE_bin) %>%
+  dplyr::summarize(locusviz::spearman_ci(abs_beta, lof.oe_ci.upper), .groups = "drop")
+
 p.constraint.gex.AFE =
   ggplot(df.gex.in_cs.AFE.loeuf, aes(x, median, color = AFE_bin)) +
   geom_errorbar(aes(ymin = median_lower, ymax = median_upper), width = 0) +
