@@ -13,9 +13,9 @@
   "access_right": "open",
   "related_identifiers": [
     {
-      "identifier": "10.1101/2025.11.25.25340489",
+      "identifier": "10.1038/s41586-026-11078-2",
       "relation": "isSupplementTo",
-      "resource_type": "publication-preprint",
+      "resource_type": "publication-article",
       "scheme": "doi"
     }
   ]
